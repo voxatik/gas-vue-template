@@ -14,7 +14,6 @@ export default defineConfig({
     },
   },
   build: {
-    // Absolute path so outDir is relative to the project root, not public/
     outDir: path.resolve(__dirname, 'gas'),
     // Don't wipe gas/ on build — server .js files live there too
     emptyOutDir: false,
