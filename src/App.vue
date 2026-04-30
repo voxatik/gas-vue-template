@@ -1,9 +1,9 @@
 <template>
-  <BLoading :is-full-page="true" :active="loading" />
+  <BLoading :is-full-page="true" :active="app.loading" />
 
   <nav class="navbar is-primary" role="navigation">
     <div class="navbar-brand">
-      <span class="navbar-item has-text-weight-bold">{{ config?.appName ?? 'GAS App' }}</span>
+      <span class="navbar-item has-text-weight-bold">{{ app.config?.appName ?? 'GAS App' }}</span>
     </div>
     <div class="navbar-menu">
       <div class="navbar-start">
@@ -23,12 +23,10 @@
 <script setup>
   import { onMounted } from 'vue'
   import { RouterLink, RouterView } from 'vue-router'
-  import { provideAppState } from '@/composables/useAppState'
-  import { provideConfig } from '@/composables/useConfig'
+  import { useAppStore } from '@/stores/app'
   import { useNotify } from '@/composables/useNotify'
 
-  const { loading } = provideAppState()
-  const { config, loadConfig } = provideConfig()
+  const app = useAppStore()
   const notify = useNotify()
 
   onMounted(async () => {
@@ -41,12 +39,12 @@
     }
 
     try {
-      loading.value = true
-      await loadConfig()
+      app.setLoading(true)
+      await app.loadConfig()
     } catch {
       notify.error('Failed to load app configuration')
     } finally {
-      loading.value = false
+      app.setLoading(false)
     }
   })
 </script>

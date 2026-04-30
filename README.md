@@ -10,7 +10,7 @@ A modern Vue 3 single-page application template for building UIs inside **Google
 - **Frontend-to-backend communication** — Promise-based wrapper around `google.script.run` for clean async server calls
 - **Local development mocks** — dev mocks automatically activate when running outside GAS so you can work with `npm run dev` without deploying
 - **Dynamic configuration** — app settings loaded from GAS Script Properties on startup
-- **Global state management** — reactive loading state and config shared across components via Vue's provide/inject
+- **Global state management** — centralized stores with [Pinia](https://pinia.vuejs.org/); a starter `useAppStore` (loading state) is included as a reference pattern
 - **Toast notifications** — success, error, warning, and info toasts via Buefy
 - **Single-file output** — entire app (JS, CSS, HTML) bundled into one HTML file for GAS compatibility
 - **Hash-based routing** — required for GAS's fixed-URL environment; uses Vue Router with `createWebHashHistory`
@@ -23,6 +23,7 @@ A modern Vue 3 single-page application template for building UIs inside **Google
 | ------------- | ------------------------------- |
 | Framework     | Vue 3.5 (Composition API)       |
 | Routing       | Vue Router 5                    |
+| State         | Pinia 3                         |
 | UI Components | Buefy 3 + Bulma 1               |
 | Build         | Vite 8 + vite-plugin-singlefile |
 | Backend       | Google Apps Script (V8 runtime) |
@@ -47,9 +48,9 @@ src/                        # Vue frontend source
 ├── views/
 │   ├── HomeView.vue        # Home page with server call demo
 │   └── AboutView.vue       # Project info and deployment instructions
+├── stores/
+│   └── app.js              # useAppStore — loading, config, configLoaded (Pinia)
 ├── composables/
-│   ├── useAppState.js      # Global loading ref (provide/inject)
-│   ├── useConfig.js        # Loads and exposes app config from GAS
 │   └── useNotify.js        # Buefy toast helpers
 └── utils/
     └── gas.js              # serverCall() + dev mocks
@@ -146,6 +147,47 @@ const devMocks = {
   myNewFunction: arg => ({ result: arg }),
 }
 ```
+
+---
+
+## State Management (Pinia)
+
+Stores live in `src/stores/`. The included `useAppStore` is a minimal reference:
+
+```js
+// src/stores/app.js
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import { serverCall } from '@/utils/gas'
+
+export const useAppStore = defineStore('app', () => {
+  const loading = ref(false)
+  const config = ref(null)
+  const configLoaded = ref(false)
+
+  function setLoading(value) { loading.value = value }
+
+  async function loadConfig() {
+    config.value = await serverCall('getConfig')
+    configLoaded.value = true
+  }
+
+  return { loading, config, configLoaded, setLoading, loadConfig }
+})
+```
+
+Use it in any component or composable:
+
+```js
+import { useAppStore } from '@/stores/app'
+
+const app = useAppStore()
+app.setLoading(true)
+const data = await serverCall('getServerData')
+app.setLoading(false)
+```
+
+Add new stores by creating additional files in `src/stores/` following the same setup-function pattern.
 
 ---
 
